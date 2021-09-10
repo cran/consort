@@ -143,7 +143,7 @@ consort_plot(data = df,
              cex = 0.7)
 
 
-## ----fig.width  = 11, fig.height = 7------------------------------------------
+## ----fig.width  = 9, fig.height = 7-------------------------------------------
 library(grid)
 # Might want to change some settings
 options(boxGrobTxt = gpar(color = "black", cex = 0.8),
@@ -177,6 +177,47 @@ g <- build_consort(list(node1,
                    side1_sp,
                    node2_sp),
               list(lab1, lab2, lab3))
+g
+
+## ----fig.width  = 9, fig.height = 7-------------------------------------------
+
+df$arm <- factor(df$arm)
+
+txt <- box_text(df$trialno, label = "Patient consented")
+node1 <- add_box(txt = txt)
+
+txt <- box_text(df$exc, label = "Excluded", bullet = TRUE)
+node_sd1 <- add_side_box(node1, txt = txt)   
+
+# Exclude subjects
+df <- df[is.na(df$exc), ]
+
+node2 <- add_box(node_sd1, txt = box_text(df$arm, label = "Patients randomised")) 
+
+txt <- box_text(df$arm)
+node3 <- add_split(node2, txt = txt)
+
+txt <- box_text(split(df$fow1, df$arm),
+                label = "Lost to follow-up", bullet = TRUE)
+node4 <- add_box(node3, txt = txt, just = "left")
+
+df <- df[is.na(df$fow1), ]
+txt <- box_text(split(df$trialno, df$arm),
+                label = "Primary analysis")
+node5 <- add_box(node4, txt = txt)
+
+lab1 <- add_label_box(node4, txt = "Baseline")
+lab2 <- add_label_box(node5, txt = "First Stage")
+
+
+g <- build_consort(list(node1,
+                        node_sd1,
+                        node2,
+                        node3,
+                        node4,
+                        node5),
+                   list(lab1, lab2))
+g
 
 ## ----eval=FALSE---------------------------------------------------------------
 #  # save plots

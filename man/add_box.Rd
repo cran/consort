@@ -4,7 +4,7 @@
 \alias{add_box}
 \title{Add nodes}
 \usage{
-add_box(prev_box = NULL, txt, dist = 0.02)
+add_box(prev_box = NULL, txt, just = "center", dist = 0.02)
 }
 \arguments{
 \item{prev_box}{Previous node object, the created new node will be vertically
@@ -13,6 +13,8 @@ node will be aligned in the top center.}
 
 \item{txt}{Text in the node. If the `prev_box` is a horizontally aligned multiple
 nodes, a vector of with the same length must be provided.}
+
+\item{just}{The justification for the text: left, center or right.}
 
 \item{dist}{Distance between previous node, including the distance between the
 side node.}
