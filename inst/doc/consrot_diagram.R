@@ -55,33 +55,15 @@ head(df)
 #               side_box,
 #               allocation = NULL,
 #               labels = NULL,
+#               coords = NULL,
 #               dist = 0.05,
-#               cex = 0.8)
-
-## ----eval=FALSE---------------------------------------------------------------
-#  add_box(prev_box = NULL, # Previous node, left blank if this is the first node.
-#          txt,             # Text in the node
-#          dist = 0.02)     # Distance between box
-#  
-#  
-#  add_side_box(prev_box,
-#               txt,
-#               dist = 0.02)
-#  
-#  add_split(prev_box,
-#            txt,
-#            dist = 0.02)
-#  
-#  add_label_box(ref_box, # Reference node to horizontally align with
-#                txt)
-#  
-#  build_consort(consort_list,      # A list of flow chart nodes
-#                label_list = NULL), # A list of node labels
-#  
+#               cex = 0.8,
+#               text_width = NULL,
+#               widths = c(0.1, 0.9))
 
 ## ----message=FALSE, fig.width  = 7, fig.height = 6----------------------------
 out <- consort_plot(data = df,
-             order = c(trialno = "Population",
+             orders = c(trialno = "Population",
                           exc1    = "Excluded",
                           arm     = "Allocated",
                           fow1    = "Lost of Follow-up",
@@ -90,12 +72,12 @@ out <- consort_plot(data = df,
                           trialno = "Final Analysis"),
              side_box = c("exc1", "fow1", "fow2"),
              cex = 0.9)
-out
+plot(out)
 
 
-## ----fig.width  = 10, fig.height = 7------------------------------------------
+## ----fig.width  = 8, fig.height = 7-------------------------------------------
 out <- consort_plot(data = df,
-             order = c(trialno = "Population",
+             orders = c(trialno = "Population",
                           exc    = "Excluded",
                           arm     = "Randomized patient",
                           fow1    = "Lost of Follow-up",
@@ -104,14 +86,15 @@ out <- consort_plot(data = df,
                           trialno = "Final Analysis"),
              side_box = c("exc", "fow1", "fow2"),
              allocation = "arm",
+             coords = c(0.4, 0.6),
              labels = c("1" = "Screening", "2" = "Randomization",
                         "5" = "Final"))
 
-out
+plot(out)
 
-## ----fig.width  = 11, fig.height = 7------------------------------------------
-consort_plot(data = df,
-             order = c(trialno = "Population",
+## ----fig.width  = 9.5, fig.height = 7-----------------------------------------
+g <- consort_plot(data = df,
+             orders = c(trialno = "Population",
                           exc    = "Excluded",
                           arm3     = "Randomized patient",
                           fow1    = "Lost of Follow-up",
@@ -122,10 +105,11 @@ consort_plot(data = df,
              allocation = "arm3",
              labels = c("1" = "Screening", "2" = "Randomization",
                         "5" = "Final"))
+plot(g)
 
-## ----fig.width  = 11, fig.height = 9------------------------------------------
-consort_plot(data = df,
-             order = list(trialno = "Population",
+## ----fig.width  = 9, fig.height = 9-------------------------------------------
+g <- consort_plot(data = df,
+             orders = list(trialno = "Population",
                           exc1    = "Excluded",
                           induc   = "Induction",
                           exc2    = "Excluded",
@@ -141,92 +125,69 @@ consort_plot(data = df,
                         "6" = "End of study"),
              dist = 0.02,
              cex = 0.7)
+plot(g)
 
-
-## ----fig.width  = 9, fig.height = 7-------------------------------------------
+## ----fig.width  = 7, fig.height = 5-------------------------------------------
 library(grid)
 # Might want to change some settings
-options(boxGrobTxt = gpar(color = "black", cex = 0.8),
-          boxGrob  = gpar(color = "black", cex = 0.8),
-          connectGrobArrow = arrow(length = unit(0.1, "inches"),
-                                   type = "closed"))
+options(txt_gp = gpar(cex = 0.8))
 
 txt1 <- "Population (n=300)"
 txt1_side <- "Excluded (n=15):\n\u2022 MRI not collected (n=3)\n\u2022 Tissues not collected (n=4)\n\u2022 Other (n=8)"
 
-node1 <- add_box(txt = txt1)
+# supports pipeline operator
+g <- add_box(txt = txt1) |>
+  add_side_box(txt = txt1_side) |> 
+  add_box(txt = "Randomized (n=200)") |> 
+  add_split(txt = c("Arm A (n=100)", "Arm B (n=100)")) |> 
+  add_side_box(txt = c("Excluded (n=15):\n\u2022 MRI not collected (n=3)\n\u2022 Tissues not collected (n=4)\n\u2022 Other (n=8)",
+                       "Excluded (n=7):\n\u2022 MRI not collected (n=3)\n\u2022 Tissues not collected (n=4)")) |> 
+  add_box(txt = c("Final analysis (n=85)", "Final analysis (n=93)")) |> 
+  add_label_box(txt = c("1" = "Screening",
+                        "3" = "Randomized",
+                        "4" = "Final analysis"))
+plot(g)
 
-node3 <- add_side_box(node1, txt = txt1_side)    
-
-node4 <- add_box(node3, txt = "Randomized (n=200)")
-
-node1_sp <- add_split(node4, txt = c("Arm A (n=100)", "Arm B (n=100"))
-side1_sp <- add_side_box(node1_sp, txt = c("Excluded (n=15):\n\u2022 MRI not collected (n=3)\n\u2022 Tissues not collected (n=4)\n\u2022 Other (n=8)",
-                                           "Excluded (n=15):\n\u2022 MRI not collected (n=3)\n\u2022 Tissues not collected (n=4)"))
-
-node2_sp <- add_box(side1_sp, txt = c("Final analysis (n=100)", "Final analysis (n=100"))
-
-lab1 <- add_label_box(node1, txt = "Screening")
-lab2 <- add_label_box(node4, txt = "Randomized")
-lab3 <- add_label_box(node2_sp, txt = "Final analysis")
-
-g <- build_consort(list(node1,
-                   node3,
-                   node4,
-                   node1_sp,
-                   side1_sp,
-                   node2_sp),
-              list(lab1, lab2, lab3))
-g
-
-## ----fig.width  = 9, fig.height = 7-------------------------------------------
+## ----fig.width  = 7, fig.height = 7-------------------------------------------
 
 df$arm <- factor(df$arm)
 
-txt <- box_text(df$trialno, label = "Patient consented")
-node1 <- add_box(txt = txt)
+txt <- gen_text(df$trialno, label = "Patient consented")
+g <- add_box(txt = txt)
 
-txt <- box_text(df$exc, label = "Excluded", bullet = TRUE)
-node_sd1 <- add_side_box(node1, txt = txt)   
+txt <- gen_text(df$exc, label = "Excluded", bullet = TRUE)
+g <- add_side_box(g, txt = txt)   
 
 # Exclude subjects
 df <- df[is.na(df$exc), ]
 
-node2 <- add_box(node_sd1, txt = box_text(df$arm, label = "Patients randomised")) 
+g <- add_box(g, txt = gen_text(df$arm, label = "Patients randomised")) 
 
-txt <- box_text(df$arm)
-node3 <- add_split(node2, txt = txt)
+txt <- gen_text(df$arm)
+g <- add_split(g, txt = txt)
 
-txt <- box_text(split(df$fow1, df$arm),
+txt <- gen_text(split(df$fow1, df$arm),
                 label = "Lost to follow-up", bullet = TRUE)
-node4 <- add_box(node3, txt = txt, just = "left")
+g <- add_box(g, txt = txt, just = "left")
 
 df <- df[is.na(df$fow1), ]
-txt <- box_text(split(df$trialno, df$arm),
+txt <- gen_text(split(df$trialno, df$arm),
                 label = "Primary analysis")
-node5 <- add_box(node4, txt = txt)
+g <- add_box(g, txt = txt)
 
-lab1 <- add_label_box(node4, txt = "Baseline")
-lab2 <- add_label_box(node5, txt = "First Stage")
+g <- add_label_box(g, txt = c("3" = "Baseline",
+                              "4" = "First Stage"))
 
-
-g <- build_consort(list(node1,
-                        node_sd1,
-                        node2,
-                        node3,
-                        node4,
-                        node5),
-                   list(lab1, lab2))
-g
+plot(g)
 
 ## ----eval=FALSE---------------------------------------------------------------
 #  # save plots
 #  png("consort_diagram.png", width = 29,
 #      height = 21, res = 300, units = "cm", type = "cairo")
-#  out
+#  plot(g)
 #  dev.off()
 #  
 
 ## ----eval=FALSE---------------------------------------------------------------
-#  ggplot2::ggsave("consort_diagram.pdf", plot = p)
+#  ggplot2::ggsave("consort_diagram.pdf", plot = g)
 

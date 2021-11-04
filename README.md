@@ -8,6 +8,9 @@
 [![R-CMD-check](https://github.com/adayim/consort/workflows/R-CMD-check/badge.svg)](https://github.com/adayim/consort/actions)
 [![CRAN
 status](https://www.r-pkg.org/badges/version/consort)](https://CRAN.R-project.org/package=consort)
+[![CRAN
+download](https://cranlogs.r-pkg.org/badges/grand-total/consort)](https://cran.r-project.org/package=consort)
+[![codecov](https://codecov.io/gh/adayim/consort/branch/main/graph/badge.svg?token=mzvaYDMPNc)](https://app.codecov.io/gh/adayim/consort)
 <!-- badges: end -->
 
 The goal of `consort` is to make it easy to create CONSORT diagrams for
@@ -90,7 +93,7 @@ out <- consort_plot(data = df,
              dist = 0.02,
              cex = 0.6)
 
-out
+plot(out)
 ```
 
 <img src="man/figures/README-diagram-1.png" width="100%" />
