@@ -1,7 +1,7 @@
 Package: consort
 Type: Package
 Title: Create Consort Diagram
-Version: 1.0.0
+Version: 1.0.1
 Authors@R: person("Alim", "Dayim",
                   email = "ad938@cam.ac.uk",
                   role = c("aut", "cre"),
@@ -11,14 +11,14 @@ License: MIT + file LICENSE
 URL: https://github.com/adayim/consort/
 BugReports: https://github.com/adayim/consort/issues
 Encoding: UTF-8
-Imports: grid, gtable
+Imports: grid
 Suggests: testthat (>= 3.0.0), knitr, rmarkdown, covr, stringi
 VignetteBuilder: knitr
 RoxygenNote: 7.1.2
 Config/testthat/edition: 3
 NeedsCompilation: no
-Packaged: 2021-11-04 15:09:06 UTC; alimd
+Packaged: 2021-12-20 21:46:27 UTC; alimd
 Author: Alim Dayim [aut, cre] (<https://orcid.org/0000-0001-9998-7463>)
 Maintainer: Alim Dayim <ad938@cam.ac.uk>
 Repository: CRAN
-Date/Publication: 2021-11-04 15:20:01 UTC
+Date/Publication: 2021-12-20 22:00:02 UTC
