@@ -40,11 +40,17 @@ fow2[!is.na(arm) & is.na(fow1)] <- sample(c("Protocol deviation", "Outcome missi
                                           sum(!is.na(arm) & is.na(fow1)), replace = T, 
                                           prob = c(0.05, 0.05, 0.9))
 
-
 df <- data.frame(trialno, exc1, induc, exc2, exc, arm, arm3, fow1, fow2)
+
+df$reas1[!is.na(arm)] <- sample(c("Protocol deviation", "Outcome missing", NA),
+                                sum(!is.na(arm)), replace = T, 
+                                prob = c(0.08, 0.07, 0.85))
+
+df$reas2[!is.na(df$reas1)] <- sample(c("Withdraw", "Discontinued", "Death", "Other"),
+                                     sum(!is.na(df$reas1)), replace = T, 
+                                     prob = c(0.05, 0.05, 0.05, 0.05))
+
 rm(trialno, exc1, induc, exc2, exc, arm, arm3, fow1, fow2, N)
-
-
 
 ## ----cars, echo=FALSE---------------------------------------------------------
 head(df)
@@ -55,17 +61,15 @@ head(df)
 #               side_box,
 #               allocation = NULL,
 #               labels = NULL,
-#               coords = NULL,
-#               dist = 0.05,
 #               cex = 0.8,
 #               text_width = NULL,
 #               widths = c(0.1, 0.9))
 
-## ----message=FALSE, fig.width  = 7, fig.height = 6----------------------------
+## ----message=FALSE, fig.width  = 6, fig.height = 6----------------------------
 out <- consort_plot(data = df,
              orders = c(trialno = "Population",
                           exc1    = "Excluded",
-                          arm     = "Allocated",
+                          trialno = "Allocated",
                           fow1    = "Lost of Follow-up",
                           trialno = "Finished Followup",
                           fow2    = "Not evaluable for the final analysis",
@@ -75,7 +79,7 @@ out <- consort_plot(data = df,
 plot(out)
 
 
-## ----fig.width  = 8, fig.height = 7-------------------------------------------
+## ----fig.width  = 7, fig.height = 6-------------------------------------------
 out <- consort_plot(data = df,
              orders = c(trialno = "Population",
                           exc    = "Excluded",
@@ -86,13 +90,12 @@ out <- consort_plot(data = df,
                           trialno = "Final Analysis"),
              side_box = c("exc", "fow1", "fow2"),
              allocation = "arm",
-             coords = c(0.4, 0.6),
              labels = c("1" = "Screening", "2" = "Randomization",
                         "5" = "Final"))
 
 plot(out)
 
-## ----fig.width  = 9.5, fig.height = 7-----------------------------------------
+## ----fig.width  = 9, fig.height = 7-------------------------------------------
 g <- consort_plot(data = df,
              orders = c(trialno = "Population",
                           exc    = "Excluded",
@@ -107,7 +110,7 @@ g <- consort_plot(data = df,
                         "5" = "Final"))
 plot(g)
 
-## ----fig.width  = 9, fig.height = 9-------------------------------------------
+## ----fig.width  = 9, fig.height = 6-------------------------------------------
 g <- consort_plot(data = df,
              orders = list(trialno = "Population",
                           exc1    = "Excluded",
@@ -123,20 +126,21 @@ g <- consort_plot(data = df,
              labels = c("1" = "Screening", "2" = "Month 4",
                         "3" = "Randomization", "5" = "Month 24",
                         "6" = "End of study"),
-             dist = 0.02,
              cex = 0.7)
 plot(g)
 
-## ----fig.width  = 7, fig.height = 5-------------------------------------------
+## ----fig.width  = 7, fig.height = 4-------------------------------------------
 library(grid)
 # Might want to change some settings
 options(txt_gp = gpar(cex = 0.8))
 
+txt0 <- c("Study 1 (n=160)", "Study 2 (n=140)")
 txt1 <- "Population (n=300)"
 txt1_side <- "Excluded (n=15):\n\u2022 MRI not collected (n=3)\n\u2022 Tissues not collected (n=4)\n\u2022 Other (n=8)"
 
 # supports pipeline operator
-g <- add_box(txt = txt1) |>
+g <- add_box(txt = txt0) |>
+  add_box(txt = txt1) |>
   add_side_box(txt = txt1_side) |> 
   add_box(txt = "Randomized (n=200)") |> 
   add_split(txt = c("Arm A (n=100)", "Arm B (n=100)")) |> 
@@ -148,7 +152,7 @@ g <- add_box(txt = txt1) |>
                         "4" = "Final analysis"))
 plot(g)
 
-## ----fig.width  = 7, fig.height = 7-------------------------------------------
+## ----fig.width  = 7, fig.height = 6-------------------------------------------
 
 df$arm <- factor(df$arm)
 
@@ -166,19 +170,22 @@ g <- add_box(g, txt = gen_text(df$arm, label = "Patients randomised"))
 txt <- gen_text(df$arm)
 g <- add_split(g, txt = txt)
 
-txt <- gen_text(split(df$fow1, df$arm),
-                label = "Lost to follow-up", bullet = TRUE)
+txt <- gen_text(split(df[,c("reas1", "reas2")], df$arm),
+                label = "Lost to follow-up")
 g <- add_box(g, txt = txt, just = "left")
 
-df <- df[is.na(df$fow1), ]
+df <- df[complete.cases(df[,c("reas1", "reas2")]), ]
 txt <- gen_text(split(df$trialno, df$arm),
                 label = "Primary analysis")
 g <- add_box(g, txt = txt)
 
-g <- add_label_box(g, txt = c("3" = "Baseline",
-                              "4" = "First Stage"))
+g <- add_label_box(g, txt = c("1" = "Baseline",
+                              "3" = "First Stage"))
 
 plot(g)
+
+## -----------------------------------------------------------------------------
+plot(g, grViz = TRUE)
 
 ## ----eval=FALSE---------------------------------------------------------------
 #  # save plots
@@ -189,5 +196,11 @@ plot(g)
 #  
 
 ## ----eval=FALSE---------------------------------------------------------------
-#  ggplot2::ggsave("consort_diagram.pdf", plot = g)
+#  ggplot2::ggsave("consort_diagram.pdf", plot = build_grid(g))
+
+## ----eval=FALSE---------------------------------------------------------------
+#  plot(g, grViz = TRUE) |>
+#      DiagrammeRsvg::export_svg() |>
+#      charToRaw() |>
+#      rsvg::rsvg_pdf("svg_graph.pdf")
 
