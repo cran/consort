@@ -10,6 +10,7 @@
 #' @seealso \code{\link[DiagrammeR]{grViz}}
 #' @export 
 #' @examples
+#' \dontrun{
 #' txt1 <- "Population (n=300)"
 #' txt1_side <- "Excluded (n=15): \n
 #'               \u2022 MRI not collected (n=3)\n
@@ -21,8 +22,8 @@
 #' g <- add_side_box(g, txt = txt1_side)
 #'
 #' g <- add_box(g, txt = "Randomized (n=200)")
-#' plot(g, grViz = TRUE)
-#' 
+#' # plot(g, grViz = TRUE)
+#' }
 build_grviz <- function(x) {
 
   if (!inherits(x, c("consort")))
@@ -30,6 +31,10 @@ build_grviz <- function(x) {
   
   # Get the maximum of height and width of each node
   nodes_layout <- attr(x, "nodes.list")
+
+  # Generate connection
+  nodes_connect <- get_connect(x)
+  nodes_connect <- sapply(nodes_connect, function(x)x$node[2])
   
   if(any(grepl("label", names(x)))){
     consort_plot <- x[grepl("node", names(x))]
@@ -45,7 +50,7 @@ build_grviz <- function(x) {
     
     lab_gpar <- label_plot[[1]]$gpar
     
-    lab_nd <- sprintf("node [shape = rectangle, style = 'rounded,filled', fillcolor = '%s' color = '%s']\n%s\n",
+    lab_nd <- sprintf("node [shape = rectangle, style = \"rounded,filled\", fillcolor = \"%s\" color = \"%s\"]\n%s\n",
                       lab_gpar$box_gp$fill, 
                       lab_gpar$txt_gp$col, 
                       paste(lab_txt[,"node"], collapse = "\n"))
@@ -81,7 +86,7 @@ build_grviz <- function(x) {
   })
   main_txt <- do.call(rbind, main_txt)
   # Remove empty label
-  null_indx <- is.null(main_txt[,"lab"]) | main_txt[,"lab"] == "" | is.na(main_txt[,"lab"])
+  null_indx <- is_empty(main_txt[,"lab"])
   main_txt <- main_txt[!null_indx,]
   
   rnk_nd <- vector("character") # Ranking
@@ -106,8 +111,23 @@ build_grviz <- function(x) {
     
     # The next one and current one is not a side box
     if(length(nodes_layout[[i+1]]) == length(nd) & all(!c(nd_type[i], nd_type[i+1]) %in% "sidebox")){
+      
       for(j in seq_along(nd)){
-        con_nd <- c(con_nd, sprintf("%s -> %s;", nodes_layout[[i]][j], nodes_layout[[i+1]][j]))
+
+        current_nd <- nodes_layout[[i]][j]
+        if(current_nd %in% nodes_connect & !is_empty(consort_plot[[current_nd]]$text)){
+          connect_to <- max(which(nodes_connect == current_nd))
+          connect_to <- names(nodes_connect[connect_to])
+          if(!is_empty(consort_plot[[connect_to]]$text))
+            con_nd <- c(con_nd, sprintf("%s -> %s;", 
+                                          current_nd,
+                                          connect_to))
+          else
+            con_nd <- c(con_nd, sprintf("%s -> %s [arrowhead = none];", 
+                                          current_nd,
+                                          connect_to))
+        }
+        
       }
       rnk_nd <- c(rnk_nd, mk_subgraph_rank(nd))
       rnk_nd <- c(rnk_nd, mk_subgraph_rank(nodes_layout[[i+1]]))
@@ -117,8 +137,11 @@ build_grviz <- function(x) {
     if(nd_type[i] == "sidebox"){
       sp_box <- nd
       if(length(nd) == 1){
-        if(is.null(consort_plot[[nd]]$text) | consort_plot[[nd]]$text == "" | is.na(consort_plot[[nd]]$text)){
-          con_nd <- c(con_nd, sprintf("%s -> %s;]", nodes_layout[[i-1]], nodes_layout[[i+1]]))
+        # Strip white space
+        if(is_empty(consort_plot[[nd]]$text)){
+          con_nd <- c(con_nd, sprintf("%s -> %s;", 
+                                      nodes_layout[[i-1]], 
+                                      nodes_layout[[i+1]]))
         }else{
           nd_lst <- mk_invs_node(nodes_layout[[i-1]], nd, nodes_layout[[i+1]])
           rnk_nd <- c(rnk_nd, nd_lst[["rank"]])
@@ -127,12 +150,24 @@ build_grviz <- function(x) {
         }
       }else{
         for(j in seq_along(nd)){
+
           # Skip if text is blank
-          if(is.null(consort_plot[[nd[j]]]$text) | consort_plot[[nd[j]]]$text == "" | is.na(consort_plot[[nd[j]]]$text)){
-            con_nd <- c(con_nd, sprintf("%s -> %s;]", nodes_layout[[i-1]][j], nodes_layout[[i+1]][j]))
+          if(is_empty(consort_plot[[nd[j]]]$text)){
+            # nd_next <- nodes_layout[[i+1]][j]
+            nd_next <- max(which(nodes_connect == nodes_layout[[i-1]][j]))
+            nd_next <- names(nodes_connect[nd_next])
+            # No arrow if next link has no text
+            if(!is_empty(consort_plot[[nd_next]]$text)){
+              con_nd <- c(con_nd, sprintf("%s -> %s;", 
+                                          nodes_layout[[i-1]][j],
+                                          nd_next))
+            }
             sp_box <- sp_box[-j]
           }else{
-            nd_lst <- mk_invs_node(nodes_layout[[i-1]][j], nd[j], nodes_layout[[i+1]][j])
+            nd_lst <- mk_invs_node(nodes_layout[[i-1]][j], 
+                                   nd[j], 
+                                   nodes_layout[[i+1]][j])
+            
             rnk_nd <- c(rnk_nd, nd_lst[["rank"]])
             inv_nd <- c(inv_nd, nd_lst[["invs"]])
             con_nd <- c(con_nd, nd_lst[["connect"]])
@@ -176,13 +211,13 @@ build_grviz <- function(x) {
   lab_nd,
   lab_edge,
   "# node definitions with substituted label text
-  node [shape = rectangle, fillcolor = Biege, style='', fillcolor = '', color = '']",
+  node [shape = rectangle, fillcolor = Biege, style=\"\", fillcolor = \"\", color = \"\"]",
   paste(main_txt[,"node"], collapse = "\n"), # Node 
   "\n## Invisible point node for joints",
   "node [shape = point, width = 0]",
   paste(inv_nd, collapse = " "),             # Invisible node 
   paste(rnk_nd, collapse = "\n"),            # Ranks
-  "edge[style=''];",
+  "edge[style=\"\"];",
   paste(con_nd, collapse = "\n"),            # Connections
   "\n}\n",
   # paste(main_txt[,"txt"], collapse = "\n"),  # Text 

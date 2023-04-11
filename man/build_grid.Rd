@@ -14,9 +14,13 @@ A \code{gList} object
 }
 \description{
 Build a \code{grob} consort diagram, use this if you want
-to save plots with \code{\link[ggplot2]{ggsave}}
+to save plots with \code{\link[ggplot2]{ggsave}}. \code{build_grid}
+does not support multiple split for the moment, please use 
+ \code{\link{build_grviz}} or \code{plot(g, grViz = TRUE)} for 
+multiple split nodes instead.
 }
 \examples{
+\dontrun{
 txt1 <- "Population (n=300)"
 txt1_side <- "Excluded (n=15): \n
               \u2022 MRI not collected (n=3)\n
@@ -28,7 +32,8 @@ g <- add_box(txt = txt1)
 g <- add_side_box(g, txt = txt1_side)
 
 g <- add_box(g, txt = "Randomized (n=200)")
-# g <- ggplot2::ggsave("consort_diagram.pdf", plot = build_grid(g))
+# g <- ggsave("consort_diagram.pdf", plot = build_grid(g))
+}
 
 }
 \seealso{

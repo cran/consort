@@ -1,7 +1,10 @@
 #' Build consort diagram
 #'
 #' Build a \code{grob} consort diagram, use this if you want
-#' to save plots with \code{\link[ggplot2]{ggsave}}
+#' to save plots with \code{\link[ggplot2]{ggsave}}. \code{build_grid}
+#' does not support multiple split for the moment, please use 
+#'  \code{\link{build_grviz}} or \code{plot(g, grViz = TRUE)} for 
+#' multiple split nodes instead.
 #'
 #' @param x A conosrt object.
 #' 
@@ -10,6 +13,7 @@
 #'
 #' @seealso \code{\link[grid]{gList}}
 #' @examples
+#' \dontrun{
 #' txt1 <- "Population (n=300)"
 #' txt1_side <- "Excluded (n=15): \n
 #'               \u2022 MRI not collected (n=3)\n
@@ -21,7 +25,8 @@
 #' g <- add_side_box(g, txt = txt1_side)
 #'
 #' g <- add_box(g, txt = "Randomized (n=200)")
-#' # g <- ggplot2::ggsave("consort_diagram.pdf", plot = build_grid(g))
+#' # g <- ggsave("consort_diagram.pdf", plot = build_grid(g))
+#' }
 #' 
 build_grid <- function(x) {
 
@@ -38,13 +43,31 @@ build_grid <- function(x) {
   
   node_tp <- which(sapply(consort_plot, "[[", "node_type")  == "splitbox")
   if(!all(abs(diff(node_tp)) == 1))
-    stop("Multiple splitts are not supportted")
+    stop("Multiple splitts are not supported, use `grViz` method instead. See `build_grviz` for details.")
   
   # Coordination
   nodes_coord <- calc_coords(consort_plot)
   
   # Generate connection
   nodes_connect <- get_connect(consort_plot)
+
+  # Move all nodes to the left if there are labels nodes
+  # based on the width of the label nodes
+  vp_height <- nodes_coord$max_height
+  vp_width <- nodes_coord$max_width
+  nodes_coord$y <- (vp_height - nodes_coord$y)/vp_height
+
+  if(any(grepl("label", names(x)))){
+    label_coord <- calc_coords_label(label_plot, 
+                                     nodes_coord$nd_y, 
+                                     max_h = nodes_coord$max_height)
+    vp_width <- sum(label_coord$width[1], vp_width)
+
+    nodes_coord$x <- (nodes_coord$x + label_coord$width[1])/vp_width
+    
+  }else{
+    nodes_coord$x <- (nodes_coord$x)/vp_width
+  }
   
   # Change nodes coordinates
   nodes <- sapply(names(consort_plot), function(i){
@@ -54,8 +77,7 @@ build_grid <- function(x) {
     r$name <- i
     
     # Skep empty side box
-    txt <- consort_plot[[i]]$text
-    if(consort_plot[[i]]$node_type == "sidebox" & (is.null(txt) | txt == "" | is.na(txt)))
+    if(is_empty(consort_plot[[i]]$text))
       return(NULL)
       
     return(r)
@@ -87,14 +109,12 @@ build_grid <- function(x) {
   }
   
   if(any(grepl("label", names(x)))){
-    label_coord <- calc_coords_label(label_plot, nodes_coord$nodes_hw)
-    # width_vp <- label_coord$lab_nd_width/sum(label_coord$lab_nd_width)
     
     # Align labels
     for(i in seq_along(label_plot)){
       nam <- names(label_plot)[i]
       r <- move_box(label_plot[[nam]]$box,
-                    x = unit(label_coord$x[nam], "npc"),
+                    x = unit(label_coord$x[nam], "mm"),
                     y = unit(label_coord$y[nam], "npc"))
       r$name <- nam
       

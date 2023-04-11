@@ -95,21 +95,6 @@ out <- consort_plot(data = df,
 
 plot(out)
 
-## ----fig.width  = 9, fig.height = 7-------------------------------------------
-g <- consort_plot(data = df,
-             orders = c(trialno = "Population",
-                          exc    = "Excluded",
-                          arm3     = "Randomized patient",
-                          fow1    = "Lost of Follow-up",
-                          trialno = "Finished Followup",
-                          fow2    = "Not evaluable",
-                          trialno = "Final Analysis"),
-             side_box = c("exc", "fow1", "fow2"),
-             allocation = "arm3",
-             labels = c("1" = "Screening", "2" = "Randomization",
-                        "5" = "Final"))
-plot(g)
-
 ## ----fig.width  = 9, fig.height = 6-------------------------------------------
 g <- consort_plot(data = df,
              orders = list(trialno = "Population",
@@ -151,6 +136,19 @@ g <- add_box(txt = txt0) |>
                         "3" = "Randomized",
                         "4" = "Final analysis"))
 plot(g)
+
+## -----------------------------------------------------------------------------
+g <- add_box(txt = c("Study 1 (n=8)", "Study 2 (n=12)", "Study 3 (n=12)"))
+g <- add_box(g, txt = "Included All (n=20)")
+g <- add_side_box(g, txt = "Excluded (n=7):\n\u2022 MRI not collected (n=3)")
+g <- add_box(g, txt = "Randomised")
+g <- add_split(g, txt = c("Arm A (n=143)", "Arm B (n=142)"))
+g <- add_box(g, txt = c("", "From Arm B"))
+g <- add_box(g, txt = "Combine all")
+g <- add_split(g, txt = c("Process 1 (n=140)", "Process 2 (n=140)", "Process 3 (n=142)"))
+
+plot(g, grViz = TRUE)
+
 
 ## ----fig.width  = 7, fig.height = 6-------------------------------------------
 
