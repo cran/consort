@@ -1,4 +1,4 @@
-## ---- include = FALSE---------------------------------------------------------
+## ----include = FALSE----------------------------------------------------------
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
@@ -6,56 +6,12 @@ knitr::opts_chunk$set(
 
 ## ----setup--------------------------------------------------------------------
 library(consort)
+data(dispos.data)
 
-## -----------------------------------------------------------------------------
-set.seed(1001)
-N <- 300
+## ----data-head, echo=FALSE----------------------------------------------------
+head(dispos.data)
 
-trialno <- sample(c(1000:2000), N)
-exc1 <- rep(NA, N)
-exc1[sample(1:N, 15)] <- sample(c("Sample not collected", "MRI not collected",
-                                  "Other"), 15, replace = T, prob = c(0.4, 0.4, 0.2))
-
-induc <- rep(NA, N)
-induc[is.na(exc1)] <- trialno[is.na(exc1)]
-
-exc2 <- rep(NA, N)
-exc2[sample(1:N, 20)] <- sample(c("Sample not collected", "Dead",
-                                  "Other"), 20, replace = T, prob = c(0.4, 0.4, 0.2))
-exc2[is.na(induc)] <- NA
-
-exc <- ifelse(is.na(exc2), exc1, exc2)
-
-arm <- rep(NA, N)
-arm[is.na(exc)] <- sample(c("Conc", "Seq"), sum(is.na(exc)), replace = T)
-arm3 <- sample(c("Trt A", "Trt B", "Trt C"), N, replace = T)
-arm3[is.na(arm)] <- NA
-
-fow1 <- rep(NA, N)
-fow1[!is.na(arm)] <- sample(c("Withdraw", "Discontinued", "Death", "Other", NA),
-                            sum(!is.na(arm)), replace = T, 
-                            prob = c(0.05, 0.05, 0.05, 0.05, 0.8))
-fow2 <- rep(NA, N)
-fow2[!is.na(arm) & is.na(fow1)] <- sample(c("Protocol deviation", "Outcome missing", NA),
-                                          sum(!is.na(arm) & is.na(fow1)), replace = T, 
-                                          prob = c(0.05, 0.05, 0.9))
-
-df <- data.frame(trialno, exc1, induc, exc2, exc, arm, arm3, fow1, fow2)
-
-df$reas1[!is.na(arm)] <- sample(c("Protocol deviation", "Outcome missing", NA),
-                                sum(!is.na(arm)), replace = T, 
-                                prob = c(0.08, 0.07, 0.85))
-
-df$reas2[!is.na(df$reas1)] <- sample(c("Withdraw", "Discontinued", "Death", "Other"),
-                                     sum(!is.na(df$reas1)), replace = T, 
-                                     prob = c(0.05, 0.05, 0.05, 0.05))
-
-rm(trialno, exc1, induc, exc2, exc, arm, arm3, fow1, fow2, N)
-
-## ----cars, echo=FALSE---------------------------------------------------------
-head(df)
-
-## ----eval=FALSE---------------------------------------------------------------
+## ----example, eval=FALSE------------------------------------------------------
 #  consort_plot(data,
 #               orders,
 #               side_box,
@@ -65,56 +21,93 @@ head(df)
 #               text_width = NULL,
 #               widths = c(0.1, 0.9))
 
-## ----message=FALSE, fig.width  = 6, fig.height = 6----------------------------
-out <- consort_plot(data = df,
-             orders = c(trialno = "Population",
-                          exc1    = "Excluded",
-                          trialno = "Allocated",
-                          fow1    = "Lost of Follow-up",
-                          trialno = "Finished Followup",
-                          fow2    = "Not evaluable for the final analysis",
-                          trialno = "Final Analysis"),
-             side_box = c("exc1", "fow1", "fow2"),
-             cex = 0.9)
+## ----patchwork, eval=FALSE----------------------------------------------------
+#  library(patchwork)
+#  
+#  wrap_elements(build_grid(g)) + plot_annotation(
+#    title = 'Consort diagram',
+#    subtitle = 'Flow chart of the XX study',
+#    caption = 'Disclaimer: None of these plots are insightful'
+#  )
+
+## ----dump-dotfile, eval = FALSE-----------------------------------------------
+#  cat(build_grviz(g), file = "consort.gv")
+
+## ----single-arms, message=FALSE, fig.width  = 6, fig.height = 6---------------
+out <- consort_plot(data = dispos.data,
+                    orders = c(trialno = "Population",
+                               exclusion = "Excluded",
+                               trialno = "Allocated",
+                               subjid_notdosed = "Not dosed",
+                               followup = "Followup",
+                               lost_followup = "Not evaluable for the final analysis",
+                               mitt = "Final Analysis"),
+                    side_box = c("exclusion", "subjid_notdosed", "lost_followup"),
+                    cex = 0.9)
 plot(out)
 
-
-## ----fig.width  = 7, fig.height = 6-------------------------------------------
-out <- consort_plot(data = df,
-             orders = c(trialno = "Population",
-                          exc    = "Excluded",
-                          arm     = "Randomized patient",
-                          fow1    = "Lost of Follow-up",
-                          trialno = "Finished Followup",
-                          fow2    = "Not evaluable",
-                          trialno = "Final Analysis"),
-             side_box = c("exc", "fow1", "fow2"),
-             allocation = "arm",
-             labels = c("1" = "Screening", "2" = "Randomization",
-                        "5" = "Final"))
-
-plot(out)
-
-## ----fig.width  = 9, fig.height = 6-------------------------------------------
-g <- consort_plot(data = df,
-             orders = list(trialno = "Population",
-                          exc1    = "Excluded",
-                          induc   = "Induction",
-                          exc2    = "Excluded",
-                          arm3     = "Randomized patient",
-                          fow1    = "Lost of Follow-up",
-                          trialno = "Finished Followup",
-                          fow2    = "Not evaluable",
-                          trialno = "Final Analysis"),
-             side_box = c("exc1", "exc2", "fow1", "fow2"),
-             allocation = "arm3",
-             labels = c("1" = "Screening", "2" = "Month 4",
-                        "3" = "Randomization", "5" = "Month 24",
-                        "6" = "End of study"),
-             cex = 0.7)
+## ----multiple-phase, fig.width  = 9, fig.height = 6---------------------------
+g <- consort_plot(data = dispos.data,
+                  orders = c(trialno = "Population",
+                             exclusion1    = "Excluded",
+                             induction   = "Induction",
+                             exclusion2    = "Excluded",
+                             arm3     = "Randomized patient",
+                             subjid_notdosed = "Not dosed",
+                             mitt = "Final miTT Analysis"),
+                  side_box = c("exclusion1", "exclusion2", "subjid_notdosed"),
+                  allocation = "arm3",
+                  labels = c("1" = "Screening", "2" = "Month 4",
+                             "3" = "Randomization", 
+                             "5" = "End of study"),
+                  cex = 0.7)
 plot(g)
 
-## ----fig.width  = 7, fig.height = 4-------------------------------------------
+## ----multiple-split, fig.width  = 12, fig.height = 8, out.width = "95%"-------
+df <- dispos.data[!dispos.data$arm3 %in% "Trt C",]
+g <- consort_plot(data = df,
+                  orders = c(trialno = "Population",
+                             exclusion1    = "Excluded",
+                             induction   = "Induction",
+                             exclusion2    = "Excluded",
+                             arm = "Randomized patient",
+                             arm3     = "",
+                             subjid_notdosed = "Not dosed",
+                             mitt = "Final miTT Analysis"),
+                  side_box = c("exclusion1", "exclusion2", "subjid_notdosed"),
+                  allocation = c("arm", "arm3"),
+                  labels = c("1" = "Screening", "2" = "Month 4",
+                             "3" = "Randomization", 
+                             "6" = "End of study"),
+                  cex = 0.7)
+plot(g)
+
+## ----multiple-split-stack, fig.width  = 13, fig.height = 10, out.width = "95%"----
+# We will exclude one arm to avoid too many arms.
+df <- dispos.data[!dispos.data$arm3 %in% "Trt C",]
+p <- consort_plot(data = df,
+                  orders = list(c(trialno = "Population"),
+                                c(exclusion = "Excluded"),
+                                c(arm     = "Randomized patient"),
+                                # The following two variables will be stacked together
+                                c(arm3     = "", # Should not provide a value to show the actual arm
+                                  subjid_notdosed="Participants not treated"),
+                                # The following two variables will be stacked together
+                                c(followup    = "Pariticpants planned for follow-up",
+                                  lost_followup = "Reason for tot followed"),
+                                c(assessed = "Assessed for final outcome"),
+                                c(no_value = "Reason for not assessed"),
+                                c(mitt = "Included in the mITT analysis")),
+                  side_box = c("exclusion", "no_value"), 
+                  allocation = c("arm", "arm3"), # Two level randomisation
+                  kickoff_sidebox = FALSE,
+                  labels = c("1" = "Screening", "2" = "Randomization",
+                             "5" = "Follow-up", "7" = "Final analysis"),
+                  cex = 0.7)
+
+plot(p)
+
+## ----providetext1, fig.width  = 7, fig.height = 4-----------------------------
 library(grid)
 # Might want to change some settings
 options(txt_gp = gpar(cex = 0.8))
@@ -137,7 +130,7 @@ g <- add_box(txt = txt0) |>
                         "4" = "Final analysis"))
 plot(g)
 
-## -----------------------------------------------------------------------------
+## ----providetext2-------------------------------------------------------------
 g <- add_box(txt = c("Study 1 (n=8)", "Study 2 (n=12)", "Study 3 (n=12)"))
 g <- add_box(g, txt = "Included All (n=20)")
 g <- add_side_box(g, txt = "Excluded (n=7):\n\u2022 MRI not collected (n=3)")
@@ -145,44 +138,71 @@ g <- add_box(g, txt = "Randomised")
 g <- add_split(g, txt = c("Arm A (n=143)", "Arm B (n=142)"))
 g <- add_box(g, txt = c("", "From Arm B"))
 g <- add_box(g, txt = "Combine all")
-g <- add_split(g, txt = c("Process 1 (n=140)", "Process 2 (n=140)", "Process 3 (n=142)"))
+# Length needs to be the same as previous one, use a list here.
+g <- add_split(g, txt = list(c("Process 1 (n=140)", "Process 2 (n=140)",
+                               "Process 3 (n=142)")))
 
 plot(g, grViz = TRUE)
 
 
-## ----fig.width  = 7, fig.height = 6-------------------------------------------
+## ----manual-multisplit, fig.width  = 13, fig.height = 6, out.width = "80%"----
+g <- add_box(txt = "Patient consented (n=200)")
+g <- add_side_box(g, txt = "Excluded (n=10):\n\u2022 MRI not collected (n=3)\n\u2022 Other (n=7)")
+g <- add_box(g, txt = "Randomised (n=190)")
+g <- add_split(g, txt = c("Randomised study (n=144)", "Preference study (n=146)"))
 
-df$arm <- factor(df$arm)
+# Provide a list here
+g <- add_split(g, txt = list(c("Allocated to surgery (n=70)", 
+                                "Allocated to medicine (n=74)"),
+                             c("Allocated to surgery (n=47)", 
+                              "Allocated to medicine (n=48)",
+                               "Placebo (n=51)")))
 
-txt <- gen_text(df$trialno, label = "Patient consented")
-g <- add_box(txt = txt)
-
-txt <- gen_text(df$exc, label = "Excluded", bullet = TRUE)
-g <- add_side_box(g, txt = txt)   
-
-# Exclude subjects
-df <- df[is.na(df$exc), ]
-
-g <- add_box(g, txt = gen_text(df$arm, label = "Patients randomised")) 
-
-txt <- gen_text(df$arm)
-g <- add_split(g, txt = txt)
-
-txt <- gen_text(split(df[,c("reas1", "reas2")], df$arm),
-                label = "Lost to follow-up")
-g <- add_box(g, txt = txt, just = "left")
-
-df <- df[complete.cases(df[,c("reas1", "reas2")]), ]
-txt <- gen_text(split(df$trialno, df$arm),
-                label = "Primary analysis")
-g <- add_box(g, txt = txt)
-
-g <- add_label_box(g, txt = c("1" = "Baseline",
-                              "3" = "First Stage"))
+g <- add_side_box(g, txt = c("Excluded (n=3):\n\u2022 Withdrawn before surgery (n=2)\n\u2022 Declined (n=1)", 
+                             "", 
+                             "Excluded (n=1):\n\u2022 Withdrawn before surgery (n=1)",
+                             "Excluded (n=3):\n\u2022 Withdrawn before surgery (n=1)\n\u2022 Declined (n=1)",
+                             "Excluded (n=10):6\n\u2022 Declined (n=10)"),
+                  side = rep("right", 5))
+g <- add_box(g, txt = c("Analysed (n=67)", "Analysed (n=74)",
+                        "Analysed (n=46)", "Analysed (n=45)", "Analysed (n=41)"))
 
 plot(g)
 
-## -----------------------------------------------------------------------------
+
+## ----disposition-data, fig.width  = 7, fig.height = 6.5-----------------------
+options(txt_gp = gpar(cex = 0.8))
+
+dispos.data$arm <- factor(dispos.data$arm)
+
+txt <- gen_text(dispos.data$trialno, label = "Patient consented")
+g <- add_box(txt = txt)
+
+txt <- gen_text(dispos.data$exclusion, label = "Excluded", bullet = TRUE)
+g <- add_side_box(g, txt = txt)   
+
+g <- add_box(g, txt = gen_text(dispos.data$arm, label = "Patients randomised")) 
+
+txt <- gen_text(dispos.data$arm)
+g <- add_split(g, txt = txt)
+
+# Exclude subjects
+dispos.data <- dispos.data[is.na(dispos.data$exclusion), ]
+
+txt <- gen_text(split(dispos.data[,c("subjid_notdosed")], dispos.data$arm),
+                label = "Not dosed", bullet = TRUE)
+g <- add_box(g, txt = txt, just = "left")
+
+txt <- gen_text(split(dispos.data$mitt, dispos.data$arm),
+                label = "Primary mITT analysis")
+g <- add_box(g, txt = txt)
+
+g <- add_label_box(g, txt = c("1" = "Baseline",
+                              "5" = "Final analysis"))
+
+plot(g)
+
+## ----save-plot----------------------------------------------------------------
 plot(g, grViz = TRUE)
 
 ## ----eval=FALSE---------------------------------------------------------------

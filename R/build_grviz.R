@@ -78,34 +78,70 @@ build_grviz <- function(x) {
     stop("last box cannot be a side box.")
   
   main_txt <- lapply(names(consort_plot), function(nd){
-    nd_num <- gsub("\\D", "", nd)
-    txt_lab <- mk_text_align(consort_plot[[nd]]$text, consort_plot[[nd]]$just)
-    c(nam = nd,
-      node = paste(nd, txt_lab),
-      lab = txt_lab)
+    text <- consort_plot[[nd]]$text
+    just <- consort_plot[[nd]]$just
+    txt_lab <- mk_text_align(text, just)
+    c(nam = nd, text = text, just = just, node = paste(nd, txt_lab))
   })
   main_txt <- do.call(rbind, main_txt)
   # Remove empty label
-  null_indx <- is_empty(main_txt[,"lab"]) & !main_txt[,"nam"] %in% unlist(nodes_layout[nd_type == "vertbox"])
+  null_indx <- is_empty(main_txt[,"text"]) & !main_txt[,"nam"] %in% unlist(nodes_layout[nd_type == "vertbox"])
   main_txt <- main_txt[!null_indx,]
   
   rnk_nd <- vector("character") # Ranking
   inv_nd <- vector("character") # Invisible node
   con_nd <- vector("character") # Connections
   
+  # For multiple split
+  if(sum(nd_type == "splitbox") > 2)
+    stop("More than two splits are not supported.")
+  
+  # Group name
+  # Number of nodes at each level
+  nd_len <- unique(sapply(nodes_layout, length))
+  names(nd_len) <- LETTERS[1:length(nd_len)]
+  group_name <- lapply(nodes_layout, function(x){
+    r <- names(nd_len[nd_len == length(x)])
+    r <- paste0(r, seq_along(x))
+    names(r) <- x
+    return(r)
+  })
+  
   # Main nodes
   for(i in seq_along(nd_type)){
     
     nd <- nodes_layout[[i]]
+
+    if(nd_type[i] != "sidebox"){
+      # Update node labels
+      main_txt <- update_node_label(main_txt = main_txt,
+                                    node = nd,
+                                    group_name = group_name[[i]])
+    }
     
+    # Skip if this is the last one
     if(i == length(nd_type))
       next
     
     if(length(nodes_layout[[i+1]]) != length(nd)){
-      nd_lst <- mk_invs_node(nd, nodes_layout[[i+1]])
+      
+      prev_node <- lapply(nodes_layout[[i+1]], function(ndx){
+        fm_node <- consort_plot[[ndx]]$prev_node
+        data.frame(from = fm_node,
+                   to = rep(ndx, length(fm_node)))
+      })
+      prev_node <- do.call(rbind, prev_node)
+      
+      nd_lst <- mk_invs_split(from_node = prev_node$from, 
+                              to_node = prev_node$to,
+                              consort_plot = consort_plot,
+                              current_group = group_name[[i]],
+                              next_group = group_name[[i+1]])
+      
       rnk_nd <- c(rnk_nd, nd_lst[["rank"]])
       inv_nd <- c(inv_nd, nd_lst[["invs"]])
       con_nd <- c(con_nd, nd_lst[["connect"]])
+      
       next
     }
     
@@ -131,6 +167,7 @@ build_grviz <- function(x) {
       }
       rnk_nd <- c(rnk_nd, mk_subgraph_rank(nd))
       rnk_nd <- c(rnk_nd, mk_subgraph_rank(nodes_layout[[i+1]]))
+
       next
     }
     
@@ -143,7 +180,10 @@ build_grviz <- function(x) {
                                       nodes_layout[[i-1]], 
                                       nodes_layout[[i+1]]))
         }else{
-          nd_lst <- mk_invs_node(nodes_layout[[i-1]], nd, nodes_layout[[i+1]])
+          nd_lst <- mk_invs_side(nodes_layout[[i-1]], 
+                                 nd, 
+                                 nodes_layout[[i+1]],
+                                 group = group_name[[i]])
           rnk_nd <- c(rnk_nd, nd_lst[["rank"]])
           inv_nd <- c(inv_nd, nd_lst[["invs"]])
           con_nd <- c(con_nd, nd_lst[["connect"]])
@@ -164,9 +204,10 @@ build_grviz <- function(x) {
             }
             sp_box <- sp_box[-j]
           }else{
-            nd_lst <- mk_invs_node(nodes_layout[[i-1]][j], 
+            nd_lst <- mk_invs_side(nodes_layout[[i-1]][j], 
                                    nd[j], 
-                                   nodes_layout[[i+1]][j])
+                                   nodes_layout[[i+1]][j],
+                                   group = group_name[[i]][j])
             
             rnk_nd <- c(rnk_nd, nd_lst[["rank"]])
             inv_nd <- c(inv_nd, nd_lst[["invs"]])
@@ -237,18 +278,20 @@ build_grviz <- function(x) {
   }
   
   # Remove empty labels
-  main_txt <- main_txt[!is.na(main_txt[,"lab"]),]
+  # main_txt <- main_txt[!is_empty(main_txt[,"text"]),]
+  
+  # Build dot
 
   grviz_txt <- paste("digraph consort_diagram {
-  graph [layout = dot]",
+  graph [layout = dot, splines=ortho]",
   lab_nd,
   lab_edge,
   "# node definitions with substituted label text
   node [shape = rectangle, fillcolor = Biege, style=\"\", fillcolor = \"\", color = \"\"]",
   paste(main_txt[,"node"], collapse = "\n"), # Node 
   "\n## Invisible point node for joints",
-  "node [shape = point, width = 0]",
-  paste(inv_nd, collapse = " "),             # Invisible node 
+  "node [shape = point, width = 0, style=invis]",
+  paste(inv_nd, collapse = "\n"),             # Invisible node 
   paste(rnk_nd, collapse = "\n"),            # Ranks
   "edge[style=\"\"];",
   paste(con_nd, collapse = "\n"),            # Connections
@@ -260,4 +303,20 @@ build_grviz <- function(x) {
   
 }
 
+
+# Update node label
+#' @keywords internal
+
+update_node_label <- function(main_txt, node, group_name){
+  
+  for(j in seq_along(node)){
+    idx_row <- main_txt[,1] == node[j]
+    main_txt[idx_row, "node"] <- paste(node[j],
+                                       mk_text_align(main_txt[idx_row, "text"], 
+                                                     main_txt[idx_row, "just"],
+                                                     group = group_name[j]))
+  }
+  
+  return(main_txt)
+}
 

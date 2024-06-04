@@ -41,10 +41,6 @@ build_grid <- function(x) {
     consort_plot <- x
   }
   
-  node_tp <- which(sapply(consort_plot, "[[", "node_type")  == "splitbox")
-  if(!all(abs(diff(node_tp)) == 1))
-    stop("Multiple splitts are not supported, use `grViz` method instead. See `build_grviz` for details.")
-  
   # Coordination
   nodes_coord <- calc_coords(consort_plot)
   
@@ -102,7 +98,12 @@ build_grid <- function(x) {
       next
     
     for(j in 2:length(nd$node)){
-      connect_gb <- connect_box(nodes[[nd$node[j]]], nodes[[nd$node[1]]], 
+      if(is.null(nodes[[nd$node[j]]])){
+        nd_name <- nodes_connect[[nd$node[j]]]$node[2]
+      }else{
+        nd_name <- nd$node[j]
+      }
+      connect_gb <- connect_box(nodes[[nd_name]], nodes[[nd$node[1]]], 
                                 connect = nd$connect, type = "p")
       grobs_list <- gList(grobs_list, connect_gb)
     }
@@ -114,7 +115,7 @@ build_grid <- function(x) {
     for(i in seq_along(label_plot)){
       nam <- names(label_plot)[i]
       r <- move_box(label_plot[[nam]]$box,
-                    x = unit(label_coord$x[nam], "mm"),
+                    x = unit(label_coord$x[nam], "char"),
                     y = unit(label_coord$y[nam], "npc"))
       r$name <- nam
       

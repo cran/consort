@@ -1,0 +1,200 @@
+digraph consort_diagram {
+  graph [layout = dot, splines=ortho]
+
+
+
+
+
+# node definitions with substituted label text
+  node [shape = rectangle, fillcolor = Biege, style="", fillcolor = "", color = ""]
+
+node1 [label = "Population (n=300)" group=A1]
+node2 [label = "Excluded (n=33)\l Dead (n=4)\l MRI not collected (n=3)\l Other (n=8)\l Sample not collected (n=18)\l"]
+node3 [label = "Randomized patient (n=267)" group=A1]
+node4 [label = "Conc (n=142)" group=B1]
+node5 [label = "Seq (n=125)" group=B2]
+node6 [label = "Trt A (n=42)" group=C1]
+node7 [label = "Trt B (n=44)" group=C2]
+node8 [label = "Trt C (n=56)" group=C3]
+node9 [label = "Trt A (n=44)" group=C4]
+node10 [label = "Trt B (n=39)" group=C5]
+node11 [label = "Trt C (n=42)" group=C6]
+node12 [label = "Lost of Follow-up (n=2)\l Never dosed (n=2)\l"]
+node13 [label = "Lost of Follow-up (n=1)\l Never dosed (n=1)\l"]
+node14 [label = "Lost of Follow-up (n=2)\l Never dosed (n=2)\l"]
+node15 [label = "Lost of Follow-up (n=7)\l Declined (n=2)\l Never dosed (n=3)\l Ranomised by error (n=2)\l"]
+node16 [label = "Lost of Follow-up (n=2)\l Never dosed (n=1)\l Ranomised by error (n=1)\l"]
+node17 [label = "Lost of Follow-up (n=4)\l Never dosed (n=3)\l Ranomised by error (n=1)\l"]
+node18 [label = "Followup-up (n=40)" group=C1]
+node19 [label = "Followup-up (n=43)" group=C2]
+node20 [label = "Followup-up (n=54)" group=C3]
+node21 [label = "Followup-up (n=37)" group=C4]
+node22 [label = "Followup-up (n=37)" group=C5]
+node23 [label = "Followup-up (n=38)" group=C6]
+node24 [label = "Lost to follow-up (n=12)\l Death (n=2)\l Discontinued (n=4)\l Other (n=3)\l Withdraw (n=3)\l"]
+node25 [label = "Lost to follow-up (n=5)\l Discontinued (n=2)\l Other (n=2)\l Withdraw (n=1)\l"]
+node26 [label = "Lost to follow-up (n=9)\l Death (n=1)\l Discontinued (n=5)\l Other (n=2)\l Withdraw (n=1)\l"]
+node27 [label = "Lost to follow-up (n=12)\l Death (n=2)\l Other (n=4)\l Withdraw (n=6)\l"]
+node28 [label = "Lost to follow-up (n=7)\l Death (n=1)\l Discontinued (n=4)\l Withdraw (n=2)\l"]
+node29 [label = "Lost to follow-up (n=7)\l Death (n=2)\l Discontinued (n=2)\l Other (n=1)\l Withdraw (n=2)\l"]
+node30 [label = "Final Analysis (n=28)" group=C1]
+node31 [label = "Final Analysis (n=38)" group=C2]
+node32 [label = "Final Analysis (n=45)" group=C3]
+node33 [label = "Final Analysis (n=25)" group=C4]
+node34 [label = "Final Analysis (n=30)" group=C5]
+node35 [label = "Final Analysis (n=31)" group=C6]
+
+
+## Invisible point node for joints
+
+node [shape = point, width = 0, style=invis]
+
+P1 [group=A1]
+P2 [group=B1]
+P3 [group=A1]
+P4 [group=B2]
+P5 [group=C1]
+P6 [group=C2]
+P7 [group=C3]
+P8 [group=C4]
+P9 [group=C5]
+P10 [group=C6]
+P11 [group=C1]
+P12 [group=C2]
+P13 [group=C3]
+P14 [group=C4]
+P15 [group=C5]
+P16 [group=C6]
+P17 [group=C1]
+P18 [group=C2]
+P19 [group=C3]
+P20 [group=C4]
+P21 [group=C5]
+P22 [group=C6]
+
+subgraph {
+  rank = same; rankdir = LR; node1;
+  }
+subgraph {
+  rank = same; rankdir = LR; P1; node2;
+  }
+subgraph {
+  rank = same; rankdir = LR; P2; P3; P4;
+  }
+subgraph {
+  rank = same; rankdir = LR; node4; node5;
+  }
+subgraph {
+  rank = same; rankdir = LR; P5; P6; P7; P8; P9; P10;
+  }
+subgraph {
+  rank = same; rankdir = LR; node6; node7; node8; node9; node10; node11;
+  }
+subgraph {
+  rank = same; rankdir = LR; P11; node12;
+  }
+subgraph {
+  rank = same; rankdir = LR; node18; node19; node20; node21; node22; node23;
+  }
+subgraph {
+  rank = same; rankdir = LR; node12; node13; node14; node15; node16; node17;
+  }
+subgraph {
+  rank = same; rankdir = LR; P12; node13;
+  }
+subgraph {
+  rank = same; rankdir = LR; P13; node14;
+  }
+subgraph {
+  rank = same; rankdir = LR; P14; node15;
+  }
+subgraph {
+  rank = same; rankdir = LR; P15; node16;
+  }
+subgraph {
+  rank = same; rankdir = LR; P16; node17;
+  }
+subgraph {
+  rank = same; rankdir = LR; P17; node24;
+  }
+subgraph {
+  rank = same; rankdir = LR; node30; node31; node32; node33; node34; node35;
+  }
+subgraph {
+  rank = same; rankdir = LR; node24; node25; node26; node27; node28; node29;
+  }
+subgraph {
+  rank = same; rankdir = LR; P18; node25;
+  }
+subgraph {
+  rank = same; rankdir = LR; P19; node26;
+  }
+subgraph {
+  rank = same; rankdir = LR; P20; node27;
+  }
+subgraph {
+  rank = same; rankdir = LR; P21; node28;
+  }
+subgraph {
+  rank = same; rankdir = LR; P22; node29;
+  }
+
+edge[style=""];
+
+node1 -> P1 [arrowhead = none];
+P1 -> node2;
+P1 -> node3;
+node3 -> P3 [arrowhead = none];
+P2 -> node4;
+P4 -> node5;
+P2 -> P3 -> P4 [arrowhead = none];
+node4 -> P6 [arrowhead = none];
+P5 -> node6;
+P6 -> node7;
+P7 -> node8;
+P5 -> P6 -> P7 [arrowhead = none];
+node5 -> P9 [arrowhead = none];
+P8 -> node9;
+P9 -> node10;
+P10 -> node11;
+P8 -> P9 -> P10 [arrowhead = none];
+P7 -> P8 [style=invis];
+node6 -> P11 [arrowhead = none];
+P11 -> node12;
+P11 -> node18;
+node7 -> P12 [arrowhead = none];
+P12 -> node13;
+P12 -> node19;
+node8 -> P13 [arrowhead = none];
+P13 -> node14;
+P13 -> node20;
+node9 -> P14 [arrowhead = none];
+P14 -> node15;
+P14 -> node21;
+node10 -> P15 [arrowhead = none];
+P15 -> node16;
+P15 -> node22;
+node11 -> P16 [arrowhead = none];
+P16 -> node17;
+P16 -> node23;
+node18 -> P17 [arrowhead = none];
+P17 -> node24;
+P17 -> node30;
+node19 -> P18 [arrowhead = none];
+P18 -> node25;
+P18 -> node31;
+node20 -> P19 [arrowhead = none];
+P19 -> node26;
+P19 -> node32;
+node21 -> P20 [arrowhead = none];
+P20 -> node27;
+P20 -> node33;
+node22 -> P21 [arrowhead = none];
+P21 -> node28;
+P21 -> node34;
+node23 -> P22 [arrowhead = none];
+P22 -> node29;
+P22 -> node35;
+
+
+}

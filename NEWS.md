@@ -1,3 +1,11 @@
+# consort 1.2.2
+
+-   Use comma separators for large number. 
+-   Support two level randomisation/stratification
+-   Support multiple variables in one node
+-   Better node alignment
+-   Improved documentation
+
 # consort 1.2.1
 
 -   Better numeric format in `gen_text`

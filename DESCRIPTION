@@ -1,7 +1,7 @@
 Package: consort
 Type: Package
 Title: Create Consort Diagram
-Version: 1.2.1
+Version: 1.2.2
 Authors@R: person("Alim", "Dayim",
                   email = "ad938@cam.ac.uk",
                   role = c("aut", "cre"),
@@ -17,10 +17,11 @@ Suggests: testthat (>= 3.0.0), knitr, DiagrammeR, rmarkdown, covr,
 VignetteBuilder: knitr
 RoxygenNote: 7.2.3
 Config/testthat/edition: 3
+Depends: R (>= 3.5.0)
+LazyData: true
 NeedsCompilation: no
-Packaged: 2023-09-22 18:27:34 UTC; alimd
+Packaged: 2024-06-03 21:06:34 UTC; alimd
 Author: Alim Dayim [aut, cre] (<https://orcid.org/0000-0001-9998-7463>)
 Maintainer: Alim Dayim <ad938@cam.ac.uk>
-Depends: R (>= 3.5.0)
 Repository: CRAN
-Date/Publication: 2023-09-22 19:40:02 UTC
+Date/Publication: 2024-06-04 13:40:02 UTC
