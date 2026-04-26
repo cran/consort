@@ -26,6 +26,10 @@ add_side_box <- function(prev_box,
                          ...) {
 
   dots <- list(...)
+  if("name" %in% names(dots)){
+    warning("`parameter name was provided but will be ignored.")
+    dots$name <- NULL
+  }
 
   # Wrap text
   if (!is.null(text_width)) {
@@ -62,8 +66,12 @@ add_side_box <- function(prev_box,
     }
   }
 
+  # Update arguments
+  args_list <- list(just = "left", box_fn = rectGrob, name = "sidebox")
+  args_list <- modifyList(args_list, dots)
+
   nodes <- lapply(seq_along(txt), function(i){
-    box <- do.call(textbox, c(list(text = txt[i], just = "left", box_fn = rectGrob, name = "sidebox"), dots))
+    box <- do.call(textbox, c(list(text = txt[i]), args_list))
 
     # Add width to the side box, calculate horizontal width
     prev_box <- prev_box[[prev_nodes[i]]]$box_hw

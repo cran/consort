@@ -1,7 +1,9 @@
 ## ----include = FALSE----------------------------------------------------------
 knitr::opts_chunk$set(
+  dpi = 300,
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  message = FALSE
 )
 
 ## ----setup--------------------------------------------------------------------
@@ -12,28 +14,51 @@ data(dispos.data)
 head(dispos.data)
 
 ## ----example, eval=FALSE------------------------------------------------------
-#  consort_plot(data,
-#               orders,
-#               side_box,
-#               allocation = NULL,
-#               labels = NULL,
-#               cex = 0.8,
-#               text_width = NULL,
-#               widths = c(0.1, 0.9))
+# consort_plot(data,
+#              orders,
+#              side_box,
+#              allocation = NULL,
+#              labels = NULL,
+#              cex = 0.8,
+#              text_width = NULL,
+#              widths = c(0.1, 0.9))
 
 ## ----patchwork, eval=FALSE----------------------------------------------------
-#  library(patchwork)
-#  
-#  wrap_elements(build_grid(g)) + plot_annotation(
-#    title = 'Consort diagram',
-#    subtitle = 'Flow chart of the XX study',
-#    caption = 'Disclaimer: None of these plots are insightful'
-#  )
+# library(patchwork)
+# 
+# wrap_elements(build_grid(g)) + plot_annotation(
+#   title = 'Consort diagram',
+#   subtitle = 'Flow chart of the XX study',
+#   caption = 'Disclaimer: None of these plots are insightful'
+# )
 
 ## ----dump-dotfile, eval = FALSE-----------------------------------------------
-#  cat(build_grviz(g), file = "consort.gv")
+# cat(build_grviz(g), file = "consort.gv")
 
-## ----single-arms, message=FALSE, fig.width  = 6, fig.height = 6---------------
+## ----defualts-----------------------------------------------------------------
+get_consort_defaults()
+
+## ----set-restore, eval = FALSE------------------------------------------------
+# set_consort_defaults(arrow_gp = gpar(col = "red", lwd = 2))
+# # ... draw diagram ...
+# init_consort_defaults() # restore
+
+## ----markup-grid, fig.width = 7, fig.height = 5, out.width="70%"--------------
+library(grid)
+set_consort_defaults(txt_gp = gpar(cex = 0.8), parse_markup = TRUE)
+
+g <- add_box(txt = "**Patients screened** (n=300)") |>
+  add_side_box(txt = "Excluded^{1} (n=15):\n\u2022 MRI not collected (n=3)\n\u2022 Other (n=12)") |>
+  add_box(txt = "__Randomised__ (n=285)") |>
+  add_split(txt = c("*Arm A* (n=143)", "*Arm B* (n=142)")) |>
+  add_box(txt = c("Analysed (n=128)", "Analysed (n=135)")) |>
+  add_label_box(txt = c("1" = "Screening", "3" = "Randomisation"))
+plot(g)
+
+## ----markup-grviz, out.width="70%", fig.width  = 3, fig.height = 1.5----------
+plot(g, grViz = TRUE)
+
+## ----single-arms, fig.width  = 6, fig.height = 6, out.width="70%"-------------
 out <- consort_plot(data = dispos.data,
                     orders = c(trialno = "Population",
                                exclusion = "Excluded",
@@ -46,7 +71,7 @@ out <- consort_plot(data = dispos.data,
                     cex = 0.9)
 plot(out)
 
-## ----multiple-phase, fig.width  = 9, fig.height = 6---------------------------
+## ----multiple-phase, fig.width  = 9, fig.height = 6, out.width="90%"----------
 g <- consort_plot(data = dispos.data,
                   orders = c(trialno = "Population",
                              exclusion1    = "Excluded",
@@ -107,10 +132,10 @@ p <- consort_plot(data = df,
 
 plot(p)
 
-## ----providetext1, fig.width  = 7, fig.height = 4-----------------------------
+## ----providetext1, fig.width  = 7, fig.height = 4, out.width="60%"------------
 library(grid)
 # Might want to change some settings
-options(txt_gp = gpar(cex = 0.8))
+set_consort_defaults(txt_gp = gpar(cex = 0.8))
 
 txt0 <- c("Study 1 (n=160)", "Study 2 (n=140)")
 txt1 <- "Population (n=300)"
@@ -130,7 +155,7 @@ g <- add_box(txt = txt0) |>
                         "4" = "Final analysis"))
 plot(g)
 
-## ----providetext2-------------------------------------------------------------
+## ----providetext2, fig.width  = 3, fig.height = 1.5, out.width="80%"----------
 g <- add_box(txt = c("Study 1 (n=8)", "Study 2 (n=12)", "Study 3 (n=12)"))
 g <- add_box(g, txt = "Included All (n=20)")
 g <- add_side_box(g, txt = "Excluded (n=7):\n\u2022 MRI not collected (n=3)")
@@ -170,8 +195,8 @@ g <- add_box(g, txt = c("Analysed (n=67)", "Analysed (n=74)",
 plot(g)
 
 
-## ----disposition-data, fig.width  = 7, fig.height = 6.5-----------------------
-options(txt_gp = gpar(cex = 0.8))
+## ----disposition-data, fig.width  = 7, fig.height = 6.5, out.width="70%"------
+set_consort_defaults(txt_gp = gpar(cex = 0.8))
 
 dispos.data$arm <- factor(dispos.data$arm)
 
@@ -202,23 +227,23 @@ g <- add_label_box(g, txt = c("1" = "Baseline",
 
 plot(g)
 
-## ----save-plot----------------------------------------------------------------
+## ----save-plot, fig.width  = 3, fig.height = 1.5, out.width="70%"-------------
 plot(g, grViz = TRUE)
 
 ## ----eval=FALSE---------------------------------------------------------------
-#  # save plots
-#  png("consort_diagram.png", width = 29,
-#      height = 21, res = 300, units = "cm", type = "cairo")
-#  plot(g)
-#  dev.off()
-#  
+# # save plots
+# png("consort_diagram.png", width = 29,
+#     height = 21, res = 300, units = "cm", type = "cairo")
+# plot(g)
+# dev.off()
+# 
 
 ## ----eval=FALSE---------------------------------------------------------------
-#  ggplot2::ggsave("consort_diagram.pdf", plot = build_grid(g))
+# ggplot2::ggsave("consort_diagram.pdf", plot = build_grid(g))
 
 ## ----eval=FALSE---------------------------------------------------------------
-#  plot(g, grViz = TRUE) |>
-#      DiagrammeRsvg::export_svg() |>
-#      charToRaw() |>
-#      rsvg::rsvg_pdf("svg_graph.pdf")
+# plot(g, grViz = TRUE) |>
+#     DiagrammeRsvg::export_svg() |>
+#     charToRaw() |>
+#     rsvg::rsvg_pdf("svg_graph.pdf")
 

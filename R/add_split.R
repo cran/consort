@@ -23,6 +23,10 @@ add_split <- function(prev_box,
                       ...) {
 
   dots <- list(...)
+  if("name" %in% names(dots)){
+    warning("`parameter name was provided but will be ignored.")
+    dots$name <- NULL
+  }
 
   just <- match.arg(just)
 
@@ -50,13 +54,19 @@ add_split <- function(prev_box,
   if(attr(prev_box, "nodes.type") == "label")
       stop("The last box added is a label, can not add box after a label!")
 
+  if(attr(prev_box, "nodes.type") == "sidebox")
+    stop("The last box added is a sidebox, can not split box after a sidebox! Add another box before split.")
+  
   # if (length(txt) == 1) {
   #   stop("The length of txt should be larger than 1, please use add_box instead.")
   # }
+  # Update arguments
+  args_list <- list(just = just, box_fn = rectGrob, name = "splitbox")
+  args_list <- modifyList(args_list, dots)
 
   if(!is.list(txt)){
     nodes <- lapply(seq_along(txt), function(i){
-    box <- do.call(textbox, c(list(text = txt[i], just = just, box_fn = rectGrob, name = "splitbox"), dots))
+    box <- do.call(textbox, c(list(text = txt[i]), args_list))
       list(
         text = txt[i],
         node_type = "splitbox",
@@ -71,8 +81,7 @@ add_split <- function(prev_box,
     # For nested splits
     nodes <- lapply(seq_along(txt), function(i){
       lapply(txt[[i]], function(x){
-        box <- do.call(textbox, c(list(text = x, just = just, 
-                                       box_fn = rectGrob, name = "splitbox"), dots))
+        box <- do.call(textbox, c(list(text = x), args_list))
         list(
           text = x,
           node_type = "splitbox",

@@ -30,6 +30,14 @@ add_box <- function(prev_box = NULL,
                     ...) {
 
   dots <- list(...)
+  if("name" %in% names(dots)){
+    warning("`parameter name was provided but will be ignored.")
+    dots$name <- NULL
+  }
+
+  # Update arguments
+  args_list <- list(box_fn = rectGrob, just = just, name = "vertbox")
+  args_list <- modifyList(args_list, dots)
 
   just <- match.arg(just)
   
@@ -60,9 +68,7 @@ add_box <- function(prev_box = NULL,
 
     # Create node
     nodes <- lapply(seq_along(txt), function(i){
-      box <- do.call(textbox, c(list(text = txt[i], just = just, 
-                                     box_fn = rectGrob, 
-                                     name = "vertbox"), dots))
+      box <- do.call(textbox, c(list(text = txt[i]), args_list))
       if(length(txt) == 1){
         prev_nd <- prev_nodes
       }else{
@@ -100,7 +106,7 @@ add_box <- function(prev_box = NULL,
   } else {
 
     nodes <- lapply(txt, function(x){
-      box <- do.call(textbox, c(list(text = x, just = just, box_fn = rectGrob, name = "vertbox"), dots))
+      box <- do.call(textbox, c(list(text = x), args_list))
       list(
         text = x,
         node_type = "vertbox",
